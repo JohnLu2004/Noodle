@@ -15,7 +15,7 @@ use rand::seq::SliceRandom;
 use serde_json::{json, Value};
 use std::collections::HashMap;
 
-use crate::{Battlesnake, Board, Game};
+use crate::{Battlesnake, Board, Game, Coord};
 
 // info is called when you create your Battlesnake on play.battlesnake.com
 // and controls your Battlesnake's appearance
@@ -58,8 +58,8 @@ pub fn get_move(_game: &Game, turn: &u32, _board: &Board, you: &Battlesnake) -> 
 
     // We've included code to prevent your Battlesnake from moving backwards
     let my_head = &you.body[0]; // Coordinates of your head
-    let my_neck = &you.body[1]; // Coordinates of your "neck"
-    
+    let my_neck = &you.body[1]; // Coordinates of your "neck"]
+
     if my_neck.x < my_head.x { // Neck is left of head, don't move left
         is_move_safe.insert("left", false);
 
@@ -71,14 +71,54 @@ pub fn get_move(_game: &Game, turn: &u32, _board: &Board, you: &Battlesnake) -> 
     
     } else if my_neck.y > my_head.y { // Neck is above head, don't move up
         is_move_safe.insert("up", false);
+
     }
 
     // TODO: Step 1 - Prevent your Battlesnake from moving out of bounds
-    // let board_width = &board.width;
-    // let board_height = &board.height;
+    let board_width: i32 = _board.width;
+    let board_height: i32 = _board.height;
+    if my_head.x == 0 { // Head is about to hit left wall
+        is_move_safe.insert("left", false);
+        println!("Don't go left")
+    }
+    if my_head.x == board_width - 1 { // Head is about to hit right wall
+        is_move_safe.insert("right", false);
+        println!("Don't go right")
+    }
+    if my_head.y == 0 { // Head is about to hit bottom wall
+        is_move_safe.insert("down", false);
+        println!("Don't go down")
+    }
+    if my_head.y == board_height - 1{ // Head is about to hit upper wall
+        is_move_safe.insert("up", false);
+        println!("Don't go up")
+    }
 
     // TODO: Step 2 - Prevent your Battlesnake from colliding with itself
-    // let my_body = &you.body;
+    let my_body = &you.body;
+    
+    let mut i: usize = 2;
+    while i < my_body.len(){
+        let my_part: &Coord = &you.body[i];
+        if my_head.x != 0 && my_head.x - 1== my_part.x && my_head.y == my_part.y{ // Head is right of body
+            is_move_safe.insert("left", false);
+            println!("don't go left");
+
+        }else if my_head.x != board_width - 1 && my_head.x + 1== my_part.x  && my_head.y == my_part.y{ // Head is left of body
+            is_move_safe.insert("right", false);
+            println!("don't go right");
+
+        }else if my_head.y != 0 && my_head.x == my_part.x && my_head.y - 1 == my_part.y{ // Head is above body
+            is_move_safe.insert("down", false);
+            println!("don't go down");
+        
+        }else if my_head.x != board_height && my_head.x == my_part.x && my_head.y + 1 == my_part.y{ // Head is below body
+            is_move_safe.insert("up", false); 
+            println!("don't go up");
+
+        }
+        i+=1;
+    }
 
     // TODO: Step 3 - Prevent your Battlesnake from colliding with other Battlesnakes
     // let opponents = &board.snakes;
@@ -91,11 +131,41 @@ pub fn get_move(_game: &Game, turn: &u32, _board: &Board, you: &Battlesnake) -> 
         .collect::<Vec<_>>();
     
     // Choose a random move from the safe ones
-    let chosen = safe_moves.choose(&mut rand::thread_rng()).unwrap();
-
+    
+    let mut chosen: &&str = safe_moves.choose(&mut rand::thread_rng()).unwrap();
+    println!("Chosen: {}",chosen);
+    
     // TODO: Step 4 - Move towards food instead of random, to regain health and survive longer
-    // let food = &board.food;
-
+    
+    let food = &_board.food;
+    let mut closest_food: &Coord = &_board.food[0];
+    let mut closest: i32 = 11+11;
+    let mut x_distance: i32;
+    let mut y_distance: i32;
+    for piece in  food{
+        x_distance = my_head.x - piece.x;
+        y_distance = my_head.y - piece.y;
+        if (x_distance)+(y_distance) < closest{
+            closest = x_distance+y_distance;
+            closest_food = piece;
+        }
+    }
+    
+    if safe_moves.contains(&"left") && my_head.x - closest_food.x > 0{
+        //go left
+        chosen = &"left";
+    }else if safe_moves.contains(&"right"){
+        //go right
+        chosen = &"right";
+    }
+    if safe_moves.contains(&"down") && my_head.y - closest_food.y > 0{
+        //go down
+        chosen = &"down";
+    }else if safe_moves.contains(&"up"){
+        //go up
+        chosen = &"up";
+    }
+    
     info!("MOVE {}: {}", turn, chosen);
     return json!({ "move": chosen });
 }
