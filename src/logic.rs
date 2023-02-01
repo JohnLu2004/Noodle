@@ -9,12 +9,10 @@
 //
 // To get you started we've included code to prevent your Battlesnake from moving backwards.
 // For more info see docs.battlesnake.com
-
 use log::info;
 use rand::seq::SliceRandom;
 use serde_json::{json, Value};
 use std::collections::HashMap;
-
 use crate::{Battlesnake, Board, Game, Coord};
 
 // info is called when you create your Battlesnake on play.battlesnake.com
@@ -143,29 +141,45 @@ pub fn get_move(_game: &Game, turn: &u32, _board: &Board, you: &Battlesnake) -> 
     let mut x_distance: i32;
     let mut y_distance: i32;
     for piece in  food{
-        x_distance = my_head.x - piece.x;
-        y_distance = my_head.y - piece.y;
-        if (x_distance)+(y_distance) < closest{
+        x_distance = i32::abs(my_head.x - piece.x);
+        y_distance = i32::abs(my_head.y - piece.y);
+        if x_distance+y_distance < closest{
             closest = x_distance+y_distance;
             closest_food = piece;
         }
     }
+    x_distance = i32::abs(my_head.x - closest_food.x);
+    y_distance = i32::abs(my_head.y - closest_food.y);
     
-    if safe_moves.contains(&"left") && my_head.x - closest_food.x > 0{
-        //go left
-        chosen = &"left";
-    }else if safe_moves.contains(&"right"){
-        //go right
-        chosen = &"right";
+    if x_distance < y_distance{
+        if safe_moves.contains(&"left") && my_head.x - closest_food.x > 0{
+            //go left
+            chosen = &"left";
+        }else if safe_moves.contains(&"right") && my_head.x - closest_food.x < 0{
+            //go right
+            chosen = &"right";
+        }else if safe_moves.contains(&"down") && my_head.y - closest_food.y > 0{
+            //go down
+            chosen = &"down";
+        }else if safe_moves.contains(&"up") && my_head.y - closest_food.y < 0{
+            //go up
+            chosen = &"up";
+        }
+    }else{
+        if safe_moves.contains(&"down") && my_head.y - closest_food.y > 0{
+            //go down
+            chosen = &"down";
+        }else if safe_moves.contains(&"up") && my_head.y - closest_food.y < 0{
+            //go up
+            chosen = &"up";
+        }else if safe_moves.contains(&"left") && my_head.x - closest_food.x > 0{
+            //go left
+            chosen = &"left";
+        }else if safe_moves.contains(&"right") && my_head.x - closest_food.x < 0{
+            //go right
+            chosen = &"right";
+        }
     }
-    if safe_moves.contains(&"down") && my_head.y - closest_food.y > 0{
-        //go down
-        chosen = &"down";
-    }else if safe_moves.contains(&"up"){
-        //go up
-        chosen = &"up";
-    }
-    
     info!("MOVE {}: {}", turn, chosen);
     return json!({ "move": chosen });
 }
