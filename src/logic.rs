@@ -151,7 +151,7 @@ pub fn get_move(_game: &Game, turn: &u32, _board: &Board, you: &Battlesnake) -> 
     x_distance = i32::abs(my_head.x - closest_food.x);
     y_distance = i32::abs(my_head.y - closest_food.y);
     
-    if x_distance < y_distance{
+    if x_distance > y_distance{
         if safe_moves.contains(&"left") && my_head.x - closest_food.x > 0{
             //go left
             chosen = &"left";
